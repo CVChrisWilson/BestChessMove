@@ -1,3 +1,10 @@
+### BestChessMove
+
+Combines chessboardjs (https://github.com/oakmac/chessboardjs) with stockfish-js (description and link below).
+
+An example of this can be found at http://rtai.co.uk/portfolio/bestchessmove/
+
+
 ### Stockfish-js
 
 Stockfish-js is an emscripten port of the stockfish chess engine.
