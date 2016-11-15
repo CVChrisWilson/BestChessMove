@@ -1,0 +1,102 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <title>Only Allow Legal Moves Example</title>
+  <base href="" />
+
+  <link rel="stylesheet" href="css/chessboard.css" />
+</head>
+<body onLoad="init()">
+<p><a href="examples#5000">&larr; Back to all examples.</a></p>
+
+<p>You can integrate ChessBoardJS with the <a href="https://github.com/jhlywa/chess.js">chess.js</a> library to only allow legal moves.
+</p>
+
+<!-- start example HTML --->
+<script src="js/chess.js"></script>
+<div id="board" style="width: 400px"></div>
+<p>FEN: <span id="fen"></span></p>
+<p>Suggested Move: <span id="calc"></span></p>
+<!-- end example HTML --->
+
+<script src="js/json3.min.js"></script>
+<script src="js/jquery-1.10.1.min.js"></script>
+<script src="js/chessboard.js"></script>
+<script>
+var init = function() {
+
+//--- start example JS ---
+var Colour = "";
+var onSnapEnd = function() {
+  updateFen();
+};
+var updateFen = function() {
+  document.getElementById("fen").innerHTML = board.fen() + ' ' + Colour + ' - - 0 1';
+}
+setColour = function(radio) {
+	Colour = radio.value;
+	updateFen();
+	}
+initColour = function() {
+	var x = document.getElementsByName("colourRBtn");
+	for (var i = 0; i < x.length; i ++)
+	{
+		if (x[i].checked)
+		{
+		Colour = x[i].value;
+		updateFen();
+		}
+	}
+}
+document.getElementById("flipBtn").onclick = 
+    function() {
+        board.orientation('flip');
+    };
+document.getElementById("resetBtn").onclick = 
+    function() {
+        board.position('start');
+		updateFen();
+    };
+document.getElementById("captureBtn").onclick = 
+    function() {
+        board.position('4k3/8/8/8/8/8/8/4K3 w - - 0 1');
+		updateFen();
+    };
+document.getElementById("calculateBtn").onclick =
+	function() {
+	//document.getElementById("calc").innerHTML = board.fen(); 
+      stockfish.postMessage('position fen ' + board.fen() + ' ' + Colour);
+      stockfish.postMessage('go depth 10');
+		}
+document.getElementById("fenBtn").onclick =
+	function() {
+		updateFen();
+	}
+var board = ChessBoard('board', {
+  draggable: true,
+  dropOffBoard: 'trash',
+  sparePieces: true,
+  position: 'start',
+  orientation: 'white',
+  onSnapEnd: onSnapEnd
+  });
+var stockfish = new Worker('js/stockfish.js');
+stockfish.onmessage = function(event) {
+		document.getElementById("calc").innerHTML = event.data; 
+	};
+updateFen();
+initColour();
+}; // end init()
+$(document).ready(init);
+</script>
+</body>
+<input type="button" id="flipBtn" value="Flip" />
+<input type="button" id="resetBtn" value="Reset" />
+<input type="button" id="captureBtn" value="Capture All" />
+<input type="button" id="calculateBtn" value="Calculate Next Move" />
+<input type="button" id="fenBtn" value="Update Fen (Dev. only)" />
+<label><input type="radio" value="w" name="colourRBtn" checked onClick="setColour(this)" >White to move</label>
+<label><input type="radio" value="b" name="colourRBtn" onClick="setColour(this)" >Black to move</label>
+</html>

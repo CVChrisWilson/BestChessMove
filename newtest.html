@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+<link rel="stylesheet" href="css/chessboard.css" />
+<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js">
+<script src="js/json3.min.js"></script>
+<script src="js/jquery-1.10.1.min.js"></script>
+<script src="js/chessboard.js"></script>
+</head>
+<body>
+<script>
+var init = function() {
+
+//--- start example JS ---
+var Colour = "";
+var moveHistory = [];
+var moveRedo = [];
+var onHistory = false;
+var onChange = function(oldPos, newPos) {
+if(onHistory == false) { // if not undo/redo command
+console.log("onChange added to undo array" + ChessBoard.objToFen(oldPos) + ChessBoard.objToFen(newPos) + board.fen());
+  moveHistory.push(ChessBoard.objToFen(oldPos)); // add new position to undo array
+  }
+  onHistory = false; //reset onHistory
+  console.log("onChange fired.");
+  updateFen();
+};
+document.getElementById("undoBtn").onclick = 
+    function() {
+		if(moveHistory.length > 0) // if undo array isn't empty
+		{
+		moveRedo.unshift(board.fen()); // add current FEN to start of redo array
+		console.log("Undo to: " + moveHistory[moveHistory.length-1]);
+		onHistory = true;
+		board.position(moveHistory[moveHistory.length-1] + ' ' + Colour + ' - - 0 1'); // print end of undo array
+		moveHistory.pop(); // remove end of undo array
+		updateFen(); // reprint FEN
+		}
+		else
+		{
+		alert("Can't undo any further.");
+		}
+    };
+document.getElementById("redoBtn").onclick = 
+    function() {
+		if(moveRedo.length > 0) // if redo array isn't empty
+		{
+		moveHistory.push(board.fen()); // add start of redo array to end of undo array
+		console.log("Redo to: " + moveRedo[0]);
+		onHistory = true;
+        board.position(moveRedo[0] + ' ' + Colour + ' - - 0 1'); // print start of redo array
+		moveRedo.shift(); // remove start of redo array
+		updateFen(); // reprting FEN
+		}
+		else
+		{
+		alert("Can't redo any further.");
+		}
+    };
+var updateFen = function() {
+  document.getElementById("fen").innerHTML = board.fen() + ' ' + Colour + ' - - 0 1';
+}
+setColour = function(radio) {
+	Colour = radio.value;
+	updateFen();
+	}
+initColour = function() {
+	var x = document.getElementsByName("colourRBtn");
+	for (var i = 0; i < x.length; i ++)
+	{
+		if (x[i].checked)
+		{
+		Colour = x[i].value;
+		updateFen();
+		}
+	}
+}
+document.getElementById("flipBtn").onclick = 
+    function() {
+        board.orientation('flip');
+    };
+document.getElementById("resetBtn").onclick = 
+    function() {
+        board.position('start');
+		updateFen();
+    };
+document.getElementById("captureBtn").onclick = 
+    function() {
+        board.position('4k3/8/8/8/8/8/8/4K3 w - - 0 1');
+		updateFen();
+    };
+document.getElementById("calculateBtn").onclick =
+	function() {
+		if((document.getElementById("sfDepth").value < 20) && 
+		(document.getElementById("sfDepth").value > 0))
+		{
+		stockfish.postMessage('position fen ' + board.fen() + ' ' + Colour);
+		stockfish.postMessage('go depth ' + document.getElementById("sfDepth").value);
+		}
+	}
+var board = ChessBoard('board', {
+  draggable: true,
+  dropOffBoard: 'trash',
+  sparePieces: true,
+  position: 'start',
+  orientation: 'white',
+  onChange: onChange
+  });
+var stockfish = new Worker('js/stockfish.js');
+stockfish.onmessage = function(event) {
+		document.getElementById("calc").innerHTML = event.data; 
+	};
+var copyTextareaBtn = document.querySelector('.js-textareacopybtn');
+
+copyTextareaBtn.addEventListener('click', function(event) {
+  var copyTextarea = document.querySelector('.js-copytextarea');
+  var selection;
+if (window.getSelection && document.createRange) {
+        selection = window.getSelection();
+        range = document.createRange();
+        range.selectNodeContents(copyTextarea);
+        selection.removeAllRanges();
+        selection.addRange(range);
+    } else if (document.selection && document.body.createTextRange) {
+        range = document.body.createTextRange();
+        range.moveToElementText(copyTextarea);
+        range.select();
+    }
+  try {
+    var successful = document.execCommand('copy');
+    var msg = successful ? 'successful' : 'unsuccessful';
+    console.log('Copying text command was ' + msg);
+  } catch (err) {
+    console.log('Oops, unable to copy');
+  }
+});
+updateFen();
+initColour();
+}; // end init()
+$(document).ready(init);
+</script>
+<div data-role="page" id="pageone">
+  <div data-role="header">
+    <h1>Best Chess Move</h1>
+  </div>
+	<center>
+	<p>Drag pieces to configure the board and press Calculate Next Move. I'll tell you what the computer would do. Problems, suggestions? Leave <a href"#">feedback</a> or visit the <a href"#">forums!</a></p>
+	</center>
+  <div data-role="main" class="ui-content">
+    <div class="ui-grid-a">
+      <div class="ui-block-a">
+		<div id="board" style="width: 400px"></div>
+		FEN: <span class="js-copytextarea" id="fen" STYLE="height:150;width:162;white-space:nowrap;background-color:pink"></span>
+		<input class="js-textareacopybtn" type="image" STYLE="white-space: nowrap" src="img/copy.png"> 
+		</div>
+
+      <div class="ui-block-b">
+		<a class="ui-btn ui-corner-all ui-shadow" type="button" id="flipBtn" value="Flip">Flip</a>
+		<a class="ui-btn ui-corner-all ui-shadow" type="button" id="resetBtn" value="Reset">Reset</a>
+		<a class="ui-btn ui-corner-all ui-shadow" type="button" id="captureBtn" value="Capture All">Capture All</a>
+		<label>Stockfish Depth (1-20)<input type="number" value="15" min="1" max="20" id="sfDepth"></label>
+		<a class="ui-btn ui-corner-all ui-shadow" type="button" id="calculateBtn" value="Calculate Next Move">Calculate Next Move</a>
+		<p>Suggested Move: <span id="calc"></span></p>
+		<a class="ui-btn ui-corner-all ui-shadow" type="button" id="undoBtn" value="Undo">&larr; Undo move</a>
+		<a class="ui-btn ui-corner-all ui-shadow" type="button" id="redoBtn" value="Undo">Redo move &rarr;</a>
+		<label><input type="radio" value="w" name="colourRBtn" checked onClick="setColour(this)" >White to move</label>
+		<label><input type="radio" value="b" name="colourRBtn" onClick="setColour(this)" >Black to move</label>
+      </div>
+    </div>
+  </div>
+</div> 
+
+</body>
+</html>

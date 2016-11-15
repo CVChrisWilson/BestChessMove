@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <title>Draggable Snapback Example</title>
+  <base href="" />
+
+  <link rel="stylesheet" href="css/chessboard.css" />
+</head>
+<body>
+<p><a href="examples#2003">&larr; Back to all examples.</a></p>
+
+<p>Set <a href="docs#config:draggable"><code class="js plain">draggable</code></a> to <code class='js keyword'>true</code> to allow drag and drop of pieces. Pieces will return to their original square when dropped off the board (ie: the default for <a href="docs#config:dropOffBoard"><code class="js plain">dropOffBoard</code></a> is <code class="js string">'snapback'</code>).
+</p>
+
+<!-- start example HTML --->
+<div id="board" style="width: 400px"></div>
+<!-- end example HTML --->
+
+<script src="js/json3.min.js"></script>
+<script src="js/jquery-1.10.1.min.js"></script>
+<script src="js/chessboard.js"></script>
+<script>
+var init = function() {
+
+//--- start example JS ---
+var cfg = {
+  draggable: true,
+  dropOffBoard: 'snapback', // this is the default
+  position: 'start'
+};
+var board = ChessBoard('board', cfg);
+//--- end example JS ---
+
+}; // end init()
+$(document).ready(init);
+</script>
+</body>
+</html>

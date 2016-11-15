@@ -1,0 +1,151 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <title>Spare Pieces Example</title>
+  <base href="" />
+    <link rel="stylesheet" href="css/foundation.css" />
+    <script src="js/vendor/modernizr.js"></script>
+	<script src="js/vendor/jquery.js"></script>
+    <script src="js/foundation/foundation.js"></script>
+	<link rel="stylesheet" href="css/chessboard.css" />
+</head>
+<body>
+<p><a href="examples#2006">&larr; Back</a></p>
+
+<p>Set <a href="docs#config:sparePieces"><code class="js plain">sparePieces</code></a> to <code class="js keyword">true</code> to show spare pieces that can be dropped onto the board.
+</p>
+
+<!-- start example HTML --->
+<div id="board" style="width: 400px"></div>
+<p>FEN: <span id="fen"></span></p>
+<p>Suggested Move: <span id="calc"></span></p>
+<!-- end example HTML --->
+
+<script src="js/json3.min.js"></script>
+<script src="js/jquery-1.10.1.min.js"></script>
+<script src="js/chessboard.js"></script>
+<script>
+var init = function() {
+
+//--- start example JS ---
+var Colour = "";
+var moveHistory = [];
+var moveRedo = [];
+var onHistory = false;
+var onChange = function(oldPos, newPos) {
+if(onHistory == false) { // if not undo/redo command
+console.log("onChange added to undo array" + ChessBoard.objToFen(oldPos) + ChessBoard.objToFen(newPos) + board.fen());
+  moveHistory.push(ChessBoard.objToFen(oldPos)); // add new position to undo array
+  }
+  onHistory = false; //reset onHistory
+  console.log("onChange fired.");
+  updateFen();
+};
+document.getElementById("undoBtn").onclick = 
+    function() {
+		if(moveHistory.length > 0) // if undo array isn't empty
+		{
+		moveRedo.unshift(board.fen()); // add current FEN to start of redo array
+		console.log("Undo to: " + moveHistory[moveHistory.length-1]);
+		onHistory = true;
+		board.position(moveHistory[moveHistory.length-1] + ' ' + Colour + ' - - 0 1'); // print end of undo array
+		moveHistory.pop(); // remove end of undo array
+		updateFen(); // reprint FEN
+		}
+		else
+		{
+		alert("Can't undo any further.");
+		}
+    };
+document.getElementById("redoBtn").onclick = 
+    function() {
+		if(moveRedo.length > 0) // if redo array isn't empty
+		{
+		moveHistory.push(board.fen()); // add start of redo array to end of undo array
+		console.log("Redo to: " + moveRedo[0]);
+		onHistory = true;
+        board.position(moveRedo[0] + ' ' + Colour + ' - - 0 1'); // print start of redo array
+		moveRedo.shift(); // remove start of redo array
+		updateFen(); // reprting FEN
+		}
+		else
+		{
+		alert("Can't redo any further.");
+		}
+    };
+var updateFen = function() {
+  document.getElementById("fen").innerHTML = board.fen() + ' ' + Colour + ' - - 0 1';
+}
+setColour = function(radio) {
+	Colour = radio.value;
+	updateFen();
+	}
+initColour = function() {
+	var x = document.getElementsByName("colourRBtn");
+	for (var i = 0; i < x.length; i ++)
+	{
+		if (x[i].checked)
+		{
+		Colour = x[i].value;
+		updateFen();
+		}
+	}
+}
+document.getElementById("flipBtn").onclick = 
+    function() {
+        board.orientation('flip');
+    };
+document.getElementById("resetBtn").onclick = 
+    function() {
+        board.position('start');
+		updateFen();
+    };
+document.getElementById("captureBtn").onclick = 
+    function() {
+        board.position('4k3/8/8/8/8/8/8/4K3 w - - 0 1');
+		updateFen();
+    };
+document.getElementById("calculateBtn").onclick =
+	function() {
+		if((document.getElementById("sfDepth").value < 20) && 
+		(document.getElementById("sfDepth").value > 0))
+		{
+		stockfish.postMessage('position fen ' + board.fen() + ' ' + Colour);
+		stockfish.postMessage('go depth ' + document.getElementById("sfDepth").value);
+		}
+	}
+document.getElementById("fenBtn").onclick =
+	function() {
+		updateFen();
+	}
+var board = ChessBoard('board', {
+  draggable: true,
+  dropOffBoard: 'trash',
+  sparePieces: true,
+  position: 'start',
+  orientation: 'white',
+  onChange: onChange
+  });
+var stockfish = new Worker('js/stockfish.js');
+stockfish.onmessage = function(event) {
+		document.getElementById("calc").innerHTML = event.data; 
+	};
+updateFen();
+initColour();
+}; // end init()
+$(document).ready(init);
+</script>
+<a class="small radius button" type="button" id="flipBtn" value="Flip">Flip</a>
+<a class="small radius button" type="button" id="resetBtn" value="Reset">Reset</a>
+<a class="small radius button" type="button" id="captureBtn" value="Capture All">Capture All</a>
+<a class="small radius button" type="button" id="calculateBtn" value="Calculate Next Move">Calculate Next Move</a>
+<a class="small radius button" type="button" id="fenBtn" value="Update Fen (Dev. only)">Update Fen (Dev. only)</a>
+<a class="small radius button" type="button" id="undoBtn" value="Undo">&larr; Undo move</a>
+<a class="small radius button" type="button" id="redoBtn" value="Undo">Redo move &rarr;</a>
+<label>Stockfish Depth (1-20)<input type="number" value="15" min="1" max="20" id="sfDepth"></label>
+<label><input type="radio" value="w" name="colourRBtn" checked onClick="setColour(this)" >White to move</label>
+<label><input type="radio" value="b" name="colourRBtn" onClick="setColour(this)" >Black to move</label>
+</body>
+</html>

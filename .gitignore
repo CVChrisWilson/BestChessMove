@@ -1,0 +1,9 @@
+.cproject
+.depend
+.project
+.settings/
+*.o
+stockfish
+/src/stockfish.js*
+node_modules/
+*~
