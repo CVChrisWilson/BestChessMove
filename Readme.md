@@ -2,7 +2,7 @@
 
 Combines chessboardjs (https://github.com/oakmac/chessboardjs) with stockfish-js (description and link below).
 
-An example of this can be found at http://rtai.co.uk/portfolio/bestchessmove/
+An example of this can be found at http://rtai.co.uk/files/bestchessmove/
 
 
 ### Stockfish-js
